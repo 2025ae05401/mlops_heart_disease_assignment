@@ -1,0 +1,24 @@
+services:
+  mlflow:
+    image: python:3.11-slim
+    working_dir: /mlflow
+    command: >
+      sh -c "pip install --no-cache-dir 'mlflow>=2.12,<4' &&
+      mlflow server --host 0.0.0.0 --port 5000
+      --backend-store-uri sqlite:////mlflow-data/mlflow.db
+      --default-artifact-root /mlflow-artifacts"
+    ports: ["5000:5000"]
+    volumes:
+      - mlflow_data:/mlflow-data
+      - mlflow_artifacts:/mlflow-artifacts
+    restart: unless-stopped
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      MODEL_PATH: /app/artifacts/model.joblib
+      LOG_LEVEL: INFO
+    profiles: ["serving"]
+volumes:
+  mlflow_data:
+  mlflow_artifacts:
